@@ -7,15 +7,28 @@ export interface UserProfile {
   firstName: string;
   lastName?: string;
   userType: string;
-  tenantId: string;
-  schoolId: string;
+  tenantId?: string;
+  schoolId?: string;
   branchId?: string;
   roles: string[];
   permissions?: string[];
 }
 
+// Development default profile (Matches reference "Brandon Septimus / Admin")
+const DEV_DEFAULT_USER: UserProfile = {
+  id: 'dev-admin-user-id',
+  email: 'admin@school.edu',
+  firstName: 'Brandon',
+  lastName: 'Septimus',
+  userType: 'STAFF',
+  tenantId: 'd0000000-0000-0000-0000-000000000001',
+  schoolId: 'e0000000-0000-0000-0000-000000000001',
+  roles: ['SUPER_ADMIN', 'PRINCIPAL', 'ADMIN'],
+  permissions: ['*'],
+};
+
 interface AuthState {
-  user: UserProfile | null;
+  user: UserProfile;
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -26,10 +39,10 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
+  user: DEV_DEFAULT_USER,
   accessToken: null,
-  isAuthenticated: false,
-  isLoading: true,
+  isAuthenticated: true, // Development bypass enabled by default
+  isLoading: false,
 
   initialize: () => {
     if (typeof window !== 'undefined') {
@@ -45,14 +58,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isAuthenticated: true,
             isLoading: false,
           });
-          get().fetchProfile();
           return;
         } catch (e) {
-          localStorage.clear();
+          localStorage.removeItem('user');
+          localStorage.removeItem('access_token');
         }
       }
     }
-    set({ isLoading: false, isAuthenticated: false, user: null });
+
+    // Default to dev mode active session (bypasses login during development)
+    set({
+      user: DEV_DEFAULT_USER,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   },
 
   setAuth: (user, accessToken, refreshToken) => {
@@ -71,7 +90,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      await apiClient.post('/auth/logout');
+      if (get().accessToken) {
+        await apiClient.post('/auth/logout');
+      }
     } catch (e) {
       // Ignore network errors on logout
     } finally {
@@ -81,9 +102,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.removeItem('user');
       }
       set({
-        user: null,
+        user: DEV_DEFAULT_USER,
         accessToken: null,
-        isAuthenticated: false,
+        isAuthenticated: true, // Keep accessible in dev mode
         isLoading: false,
       });
     }
@@ -91,12 +112,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   fetchProfile: async () => {
     try {
+      const token = get().accessToken;
+      if (!token) return;
+
       const res = await apiClient.get('/auth/me');
       const permissionsRes = await apiClient.get('/rbac/my-permissions');
 
       const userData = {
         ...res.data.data,
-        permissions: permissionsRes.data.data || [],
+        permissions: permissionsRes.data?.data || [],
       };
 
       if (typeof window !== 'undefined') {
@@ -104,7 +128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       set({ user: userData });
     } catch (err) {
-      // Handled by 401 interceptor
+      // Silent in dev
     }
   },
 }));
