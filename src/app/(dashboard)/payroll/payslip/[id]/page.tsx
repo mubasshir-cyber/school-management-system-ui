@@ -29,40 +29,20 @@ export default function PrintablePayslipPage() {
     queryFn: () => payrollService.getPayslip(itemId),
   });
 
-  const sampleSlip: PayrollItem = {
-    id: itemId,
-    payrollId: 'pay-1',
-    staffId: 'staff-1',
-    staff: {
-      id: 'staff-1',
-      employeeCode: 'EMP-2026-0001',
-      firstName: 'Dr. Robert',
-      lastName: 'Jenkins',
-      department: { name: 'Mathematics Department' },
-      designation: { title: 'Senior Post-Graduate Teacher' },
-    },
-    basicSalary: 30000,
-    totalEarnings: 60000,
-    totalDeductions: 3800,
-    unpaidLeavesCount: 0,
-    lopDeductionAmount: 0,
-    netSalary: 56200,
-    breakdown: {
-      earnings: [
-        { name: 'Basic Pay (50%)', amount: 30000 },
-        { name: 'House Rent Allowance (HRA 40%)', amount: 12000 },
-        { name: 'Special Allowance', amount: 18000 },
-      ],
-      deductions: [
-        { name: 'Employees Provident Fund (EPF 12%)', amount: 3600 },
-        { name: 'Professional Tax (PT)', amount: 200 },
-      ],
-    },
-    status: 'PAID',
-    createdAt: '2026-09-30T10:00:00Z',
-  };
+  const item = payslip;
 
-  const item = payslip || sampleSlip;
+  if (!item) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <p className="text-sm text-[#667085]">Payslip record not found in database.</p>
+        <Link href="/payroll">
+          <Button variant="outline" size="sm" leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}>
+            Back to Payroll
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12 max-w-4xl mx-auto">

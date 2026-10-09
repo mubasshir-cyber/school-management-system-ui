@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import {
   Users,
   GraduationCap,
@@ -33,84 +34,89 @@ import {
 import { KpiCard } from '../../../components/ui/kpi-card';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
+import { studentService } from '../../../services/student.service';
+import { staffService } from '../../../services/staff.service';
+import { feeService } from '../../../services/fee.service';
+import { attendanceService } from '../../../services/attendance.service';
 
 export default function DashboardPage() {
-  // Fee Collection Line/Area Data (Jan - Aug)
-  const feeData = [
-    { month: 'Jan', collected: 210, pending: 80 },
-    { month: 'Feb', collected: 260, pending: 95 },
-    { month: 'Mar', collected: 230, pending: 70 },
-    { month: 'Apr', collected: 340, pending: 110 },
-    { month: 'May', collected: 290, pending: 85 },
-    { month: 'Jun', collected: 380, pending: 130 },
-    { month: 'Jul', collected: 320, pending: 90 },
-    { month: 'Aug', collected: 420, pending: 105 },
-  ];
+  const { data: studentsData } = useQuery({
+    queryKey: ['dashboard-students'],
+    queryFn: () => studentService.getStudents({ limit: 100 }),
+  });
 
-  // Gender Demographics Data
+  const { data: staffData } = useQuery({
+    queryKey: ['dashboard-staff'],
+    queryFn: () => staffService.getStaffList({ limit: 100 }),
+  });
+
+  const { data: invoicesData } = useQuery({
+    queryKey: ['dashboard-invoices'],
+    queryFn: () => feeService.getInvoices({ limit: 100 }),
+  });
+
+  const { data: holidaysData = [] } = useQuery({
+    queryKey: ['dashboard-holidays'],
+    queryFn: () => attendanceService.getHolidays(),
+  });
+
+  const students = studentsData?.items || [];
+  const totalStudents = studentsData?.total ?? students.length;
+
+  const staff = staffData?.items || [];
+  const totalStaff = staffData?.total ?? staff.length;
+  const teachersCount = staff.filter((s) => s.designation?.title?.toLowerCase().includes('teacher')).length;
+  const otherStaffCount = totalStaff - teachersCount;
+
+  const invoices = invoicesData?.items || [];
+  const totalCollected = invoices.reduce((acc, inv) => acc + (Number(inv.paidAmount) || 0), 0);
+  const totalPending = invoices.reduce((acc, inv) => acc + (Number(inv.balanceAmount) || 0), 0);
+
+  // Gender demographics from students
+  const boysCount = students.filter((s) => s.gender === 'MALE').length;
+  const girlsCount = students.filter((s) => s.gender === 'FEMALE').length;
+  const boysPercent = totalStudents > 0 ? ((boysCount / totalStudents) * 100).toFixed(1) : '0';
+  const girlsPercent = totalStudents > 0 ? ((girlsCount / totalStudents) * 100).toFixed(1) : '0';
+
   const genderData = [
-    { name: 'Boys', value: 912, percentage: '52.5%', color: '#2563EB' },
-    { name: 'Girls', value: 826, percentage: '47.5%', color: '#F59E0B' },
+    { name: 'Boys', value: boysCount || (totalStudents === 0 ? 0 : 0), percentage: `${boysPercent}%`, color: '#2563EB' },
+    { name: 'Girls', value: girlsCount || (totalStudents === 0 ? 0 : 0), percentage: `${girlsPercent}%`, color: '#F59E0B' },
   ];
 
-  // Upcoming Events
-  const upcomingEvents = [
-    {
-      day: '15',
-      month: 'JUL',
-      title: 'New Student Orientation',
-      time: '09:00 AM',
-      location: 'Grade 7 - Main Auditorium',
-      color: 'bg-[#EFF6FF] text-[#2563EB]',
-    },
-    {
-      day: '19',
-      month: 'JUL',
-      title: 'Parent-Teacher Meeting',
-      time: '10:30 AM',
-      location: 'All Classes',
-      color: 'bg-[#EFF6FF] text-[#2563EB]',
-    },
-    {
-      day: '27',
-      month: 'JUL',
-      title: 'Science Fair',
-      time: '02:00 PM',
-      location: 'Grade 5–8',
-      color: 'bg-[#EFF6FF] text-[#2563EB]',
-    },
+  // Fee chart (derived or current total)
+  const feeData = [
+    { month: 'Total', collected: Math.round(totalCollected / 1000), pending: Math.round(totalPending / 1000) },
   ];
 
-  // Recent Activities
+  // Upcoming Events from real holidays/calendar
+  const upcomingEvents = holidaysData.slice(0, 3).map((h) => {
+    const d = new Date(h.startDate);
+    return {
+      day: isNaN(d.getDate()) ? '1' : String(d.getDate()).padStart(2, '0'),
+      month: isNaN(d.getMonth()) ? 'N/A' : d.toLocaleString('default', { month: 'short' }).toUpperCase(),
+      title: h.title,
+      time: 'All Day',
+      location: h.holidayType || 'School Event',
+      color: 'bg-[#EFF6FF] text-[#2563EB]',
+    };
+  });
+
+  // Recent Activities from recent students / staff registered
   const recentActivities = [
-    {
-      title: 'New student registered',
-      desc: 'Ahmed Khan (Grade 5)',
-      time: '10 mins ago',
+    ...students.slice(0, 2).map((s) => ({
+      title: 'Student registered',
+      desc: `${s.firstName} ${s.lastName} (${s.studentCode})`,
+      time: new Date(s.createdAt).toLocaleDateString(),
       icon: Users,
       iconColor: 'bg-[#ECFDF5] text-[#10B981]',
-    },
-    {
-      title: 'Fee payment received',
-      desc: 'Receipt #REC-2025-00142',
-      time: '15 mins ago',
-      icon: CreditCard,
+    })),
+    ...staff.slice(0, 2).map((st) => ({
+      title: 'Staff member added',
+      desc: `${st.firstName} ${st.lastName} (${st.employeeCode})`,
+      time: new Date(st.createdAt).toLocaleDateString(),
+      icon: Briefcase,
       iconColor: 'bg-[#EFF6FF] text-[#2563EB]',
-    },
-    {
-      title: 'Staff attendance updated',
-      desc: 'Ayesha Patel',
-      time: '2 hours ago',
-      icon: CalendarCheck,
-      iconColor: 'bg-[#FFFBEB] text-[#D97706]',
-    },
-    {
-      title: 'Result published',
-      desc: 'Grade 10 - Annual Exam',
-      time: '3 hours ago',
-      icon: Award,
-      iconColor: 'bg-[#EFF6FF] text-[#2563EB]',
-    },
+    })),
   ];
 
   // Quick Action Items
@@ -135,38 +141,38 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Row 1: 4 KPI Cards (Desktop 4 cards, Mobile/Tablet 2x2 grid) */}
+      {/* Row 1: 4 KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
         <KpiCard
           title="Students"
-          value="1,738"
+          value={totalStudents.toLocaleString()}
           icon={<Users className="w-5 h-5" />}
-          trend="+ 12%"
+          trend="Total"
           trendPositive={true}
           colorScheme="blue"
         />
         <KpiCard
           title="Teachers"
-          value="179"
+          value={teachersCount.toLocaleString()}
           icon={<GraduationCap className="w-5 h-5" />}
-          trend="+ 2%"
+          trend="Active"
           trendPositive={true}
           colorScheme="amber"
         />
         <KpiCard
           title="Staffs"
-          value="65"
+          value={totalStaff.toLocaleString()}
           icon={<Briefcase className="w-5 h-5" />}
-          trend="+ 4%"
+          trend="Total"
           trendPositive={true}
           colorScheme="green"
         />
         <KpiCard
           title="Fee Collection"
-          value="₹ 8,93,450"
+          value={`₹ ${totalCollected.toLocaleString()}`}
           icon={<CreditCard className="w-5 h-5" />}
-          trend="+ 18%"
-          trendPositive={true}
+          trend={`₹ ${totalPending.toLocaleString()} pending`}
+          trendPositive={totalPending === 0}
           colorScheme="rose"
         />
       </div>
@@ -274,7 +280,7 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                  <span className="text-base font-bold text-[#172033]">1,738</span>
+                  <span className="text-base font-bold text-[#172033]">{totalStudents.toLocaleString()}</span>
                   <span className="text-[10px] text-[#98A2B3]">Total</span>
                 </div>
               </div>
@@ -283,11 +289,11 @@ export default function DashboardPage() {
               <div className="flex items-center justify-center gap-4 mt-3 text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />
-                  <span className="text-[#667085] font-medium">Boys: 912 (52.5%)</span>
+                  <span className="text-[#667085] font-medium">Boys: {boysCount} ({boysPercent}%)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-                  <span className="text-[#667085] font-medium">Girls: 826 (47.5%)</span>
+                  <span className="text-[#667085] font-medium">Girls: {girlsCount} ({girlsPercent}%)</span>
                 </div>
               </div>
             </CardContent>
@@ -304,19 +310,23 @@ export default function DashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="space-y-3 pt-2 pb-4">
-              {upcomingEvents.map((evt, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors">
-                  <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0 ${evt.color}`}>
-                    <span className="text-xs font-bold leading-none">{evt.day}</span>
-                    <span className="text-[9px] font-semibold leading-tight">{evt.month}</span>
+              {upcomingEvents.length === 0 ? (
+                <p className="text-xs text-[#98A2B3] py-4 text-center">No upcoming events recorded.</p>
+              ) : (
+                upcomingEvents.map((evt, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors">
+                    <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0 ${evt.color}`}>
+                      <span className="text-xs font-bold leading-none">{evt.day}</span>
+                      <span className="text-[9px] font-semibold leading-tight">{evt.month}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-[#172033] truncate">{evt.title}</p>
+                      <p className="text-[11px] text-[#667085] truncate">{evt.location}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#98A2B3] shrink-0">{evt.time}</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#172033] truncate">{evt.title}</p>
-                    <p className="text-[11px] text-[#667085] truncate">{evt.location}</p>
-                  </div>
-                  <span className="text-[10px] font-semibold text-[#98A2B3] shrink-0">{evt.time}</span>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -347,7 +357,7 @@ export default function DashboardPage() {
                     />
                     <path
                       className="text-[#10B981]"
-                      strokeDasharray="94.2, 100"
+                      strokeDasharray="100, 100"
                       strokeWidth="3.2"
                       strokeLinecap="round"
                       stroke="currentColor"
@@ -355,10 +365,10 @@ export default function DashboardPage() {
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
                   </svg>
-                  <span className="absolute text-xs font-bold text-[#172033]">94.2%</span>
+                  <span className="absolute text-xs font-bold text-[#172033]">{totalStudents > 0 ? '100%' : '0%'}</span>
                 </div>
                 <p className="text-xs font-bold text-[#172033] mt-2">Students</p>
-                <p className="text-[11px] text-[#98A2B3]">1,637 / 1,738</p>
+                <p className="text-[11px] text-[#98A2B3]">{totalStudents} Total</p>
               </div>
 
               {/* Staffs Circle */}
@@ -374,7 +384,7 @@ export default function DashboardPage() {
                     />
                     <path
                       className="text-[#2563EB]"
-                      strokeDasharray="96.5, 100"
+                      strokeDasharray="100, 100"
                       strokeWidth="3.2"
                       strokeLinecap="round"
                       stroke="currentColor"
@@ -382,10 +392,10 @@ export default function DashboardPage() {
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
                   </svg>
-                  <span className="absolute text-xs font-bold text-[#172033]">96.5%</span>
+                  <span className="absolute text-xs font-bold text-[#172033]">{totalStaff > 0 ? '100%' : '0%'}</span>
                 </div>
                 <p className="text-xs font-bold text-[#172033] mt-2">Staffs</p>
-                <p className="text-[11px] text-[#98A2B3]">62 / 65</p>
+                <p className="text-[11px] text-[#98A2B3]">{totalStaff} Total</p>
               </div>
             </CardContent>
           </Card>

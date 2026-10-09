@@ -16,7 +16,11 @@ import {
   CheckCircle2,
   AlertCircle,
   BookOpen,
-  ChevronRight
+  ChevronRight,
+  Layers,
+  Sparkles,
+  Filter,
+  Check,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import { examsService, ExamSchedule } from '@/services/exams.service';
-import { academicService } from '@/services/academic.service';
+import { academicService, SubjectItem } from '@/services/academic.service';
 import { staffService } from '@/services/staff.service';
 
 export default function ExamScheduleDetailPage() {
@@ -34,6 +38,7 @@ export default function ExamScheduleDetailPage() {
   const queryClient = useQueryClient();
 
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>('ALL');
   const [errorMsg, setErrorMsg] = useState('');
 
   const [slotData, setSlotData] = useState({
@@ -75,9 +80,15 @@ export default function ExamScheduleDetailPage() {
     enabled: !!slotData.classId,
   });
 
-  const { data: subjects = [] } = useQuery({
+  const { data: allSubjects = [] } = useQuery({
     queryKey: ['academic-subjects'],
     queryFn: () => academicService.getSubjects(),
+  });
+
+  const { data: classAssignedSubjects = [] } = useQuery({
+    queryKey: ['class-subjects', slotData.classId],
+    queryFn: () => academicService.getClassSubjects(slotData.classId),
+    enabled: !!slotData.classId,
   });
 
   const { data: staffList = [] } = useQuery({
@@ -110,12 +121,13 @@ export default function ExamScheduleDetailPage() {
     },
   });
 
-  const resetSlotForm = () => {
+  const resetSlotForm = (prefillClassId?: string) => {
+    const targetClassId = prefillClassId || classes[0]?.id || '';
     setSlotData({
-      classId: '',
+      classId: targetClassId,
       sectionId: '',
       subjectId: '',
-      examDate: exam?.startDate || '',
+      examDate: exam?.startDate ? exam.startDate.split('T')[0] : '',
       startTime: '09:00:00',
       endTime: '12:00:00',
       roomNumber: '',
@@ -128,9 +140,29 @@ export default function ExamScheduleDetailPage() {
     setErrorMsg('');
   };
 
-  const handleOpenSlotModal = () => {
-    resetSlotForm();
+  const handleOpenSlotModal = (prefillClassId?: string) => {
+    resetSlotForm(prefillClassId);
     setIsSlotModalOpen(true);
+  };
+
+  const handleSubjectChange = (subjectId: string) => {
+    const sub = allSubjects.find((s) => s.id === subjectId);
+    if (sub) {
+      const theory = sub.theoryMaxMarks ?? 70;
+      const practical = sub.practicalMaxMarks ?? 30;
+      const total = theory + practical;
+      const pass = sub.passingMarks ?? Math.round(total * 0.35);
+      setSlotData({
+        ...slotData,
+        subjectId,
+        theoryMaxMarks: theory,
+        practicalMaxMarks: practical,
+        maxMarks: total,
+        passMarks: pass,
+      });
+    } else {
+      setSlotData({ ...slotData, subjectId });
+    }
   };
 
   const handleSlotSubmit = (e: React.FormEvent) => {
@@ -155,6 +187,27 @@ export default function ExamScheduleDetailPage() {
     );
   }
 
+  // Determine selectable subjects: prioritize subjects assigned to this class if available, else all subjects
+  const availableSubjects: SubjectItem[] =
+    classAssignedSubjects.length > 0
+      ? classAssignedSubjects.map((cs) => cs.subject).filter(Boolean)
+      : allSubjects;
+
+  // Filter schedules by selected class
+  const filteredSchedules =
+    selectedClassFilter === 'ALL'
+      ? schedules
+      : schedules.filter((s) => s.classId === selectedClassFilter);
+
+  // Group schedules by class for structured class-wise view
+  const schedulesByClass = classes.map((cls) => {
+    const classSchedules = schedules.filter((s) => s.classId === cls.id);
+    return {
+      class: cls,
+      schedules: classSchedules,
+    };
+  }).filter((group) => selectedClassFilter === 'ALL' || group.class.id === selectedClassFilter);
+
   return (
     <div className="space-y-6">
       {/* Top Breadcrumb & Actions */}
@@ -162,26 +215,30 @@ export default function ExamScheduleDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/exams"
-            className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            className="p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition shadow-xs"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{exam.name}</h1>
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{exam.name}</h1>
               <Badge variant={exam.status === 'RESULTS_PUBLISHED' ? 'success' : 'primary'}>
                 {exam.status.replace('_', ' ')}
               </Badge>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {exam.examType?.name} • {exam.academicYear?.name} • {exam.startDate} to {exam.endDate}
+            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+              <span>{exam.examType?.name}</span>
+              <span>•</span>
+              <span>{exam.academicYear?.name}</span>
+              <span>•</span>
+              <span>{exam.startDate?.split('T')[0]} to {exam.endDate?.split('T')[0]}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href={`/exams/results/${exam.id}`}>
-            <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+            <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-2xl">
               <Award className="w-4 h-4 mr-1.5" />
               View Results
             </Button>
@@ -190,6 +247,7 @@ export default function ExamScheduleDetailPage() {
           {exam.status === 'DRAFT' && (
             <Button
               variant="outline"
+              className="rounded-2xl"
               onClick={() => updateStatusMutation.mutate('SCHEDULED')}
               disabled={updateStatusMutation.isPending}
             >
@@ -200,7 +258,7 @@ export default function ExamScheduleDetailPage() {
           {exam.status === 'SCHEDULED' && (
             <Button
               variant="outline"
-              className="text-amber-700 border-amber-200 hover:bg-amber-50"
+              className="text-amber-700 border-amber-200 hover:bg-amber-50 rounded-2xl"
               onClick={() => updateStatusMutation.mutate('ONGOING')}
               disabled={updateStatusMutation.isPending}
             >
@@ -211,7 +269,7 @@ export default function ExamScheduleDetailPage() {
           {exam.status === 'ONGOING' && (
             <Button
               variant="outline"
-              className="text-blue-700 border-blue-200 hover:bg-blue-50"
+              className="text-blue-700 border-blue-200 hover:bg-blue-50 rounded-2xl"
               onClick={() => updateStatusMutation.mutate('COMPLETED')}
               disabled={updateStatusMutation.isPending}
             >
@@ -220,136 +278,193 @@ export default function ExamScheduleDetailPage() {
           )}
 
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={handleOpenSlotModal}
+            className="bg-blue-600 hover:bg-blue-500 text-white rounded-2xl shadow-md shadow-blue-500/20 cursor-pointer"
+            onClick={() => handleOpenSlotModal()}
           >
             <Plus className="w-4 h-4 mr-1.5" />
-            Add Paper Slot
+            Add Subject Paper
           </Button>
         </div>
       </div>
 
       {/* Info Banner */}
-      <Card className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50/50 border-blue-100">
+      <Card className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50/50 border-blue-100 rounded-3xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
           <div>
-            <span className="text-gray-500 font-medium">Grading System:</span>
-            <p className="font-semibold text-gray-900 mt-0.5">{exam.gradingScale?.name || 'Standard Percentage'}</p>
+            <span className="text-slate-500 font-medium">Grading System:</span>
+            <p className="font-bold text-slate-900 mt-0.5">{exam.gradingScale?.name || 'Standard Percentage'}</p>
           </div>
           <div>
-            <span className="text-gray-500 font-medium">Total Paper Slots:</span>
-            <p className="font-semibold text-blue-700 mt-0.5">{schedules.length} scheduled</p>
+            <span className="text-slate-500 font-medium">Total Paper Slots:</span>
+            <p className="font-bold text-blue-700 mt-0.5">{schedules.length} Papers Scheduled</p>
           </div>
           <div>
-            <span className="text-gray-500 font-medium">Exam Window:</span>
-            <p className="font-semibold text-gray-900 mt-0.5">{exam.startDate} - {exam.endDate}</p>
+            <span className="text-slate-500 font-medium">Exam Window:</span>
+            <p className="font-bold text-slate-900 mt-0.5">{exam.startDate?.split('T')[0]} - {exam.endDate?.split('T')[0]}</p>
           </div>
           <div>
-            <span className="text-gray-500 font-medium">Description:</span>
-            <p className="font-semibold text-gray-700 mt-0.5 line-clamp-1">{exam.description || 'Summative semester examination'}</p>
+            <span className="text-slate-500 font-medium">Classes Covered:</span>
+            <p className="font-bold text-slate-700 mt-0.5">
+              {new Set(schedules.map((s) => s.classId)).size} / {classes.length} Classes
+            </p>
           </div>
         </div>
       </Card>
 
-      {/* Timetable Slots Table */}
-      <Card className="p-6 bg-white">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <div>
-            <h3 className="text-base font-bold text-gray-900">Examination Timetable & Papers</h3>
-            <p className="text-xs text-gray-500">Scheduled test dates, classrooms, invigilators, and score rubrics.</p>
-          </div>
-        </div>
+      {/* Class Selector Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <span className="text-xs font-bold text-slate-500 flex items-center gap-1 shrink-0 mr-1">
+          <Filter className="w-3.5 h-3.5" /> Class Filter:
+        </span>
+        <button
+          onClick={() => setSelectedClassFilter('ALL')}
+          className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer shrink-0 ${
+            selectedClassFilter === 'ALL'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          All Classes ({schedules.length})
+        </button>
+        {classes.map((cls) => {
+          const count = schedules.filter((s) => s.classId === cls.id).length;
+          return (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassFilter(cls.id)}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer shrink-0 ${
+                selectedClassFilter === cls.id
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {cls.name} ({count})
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-600 font-semibold text-xs uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Date & Time</th>
-                <th className="py-3 px-4">Class / Section</th>
-                <th className="py-3 px-4">Subject</th>
-                <th className="py-3 px-4">Room</th>
-                <th className="py-3 px-4">Marks Structure</th>
-                <th className="py-3 px-4">Invigilator</th>
-                <th className="py-3 px-4 text-right">Marks Entry</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-gray-700">
-              {isLoadingSchedules ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">Loading timetable slots...</td>
-                </tr>
-              ) : schedules.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">
-                    No examination paper slots added yet. Click &quot;Add Paper Slot&quot; above.
-                  </td>
-                </tr>
-              ) : (
-                schedules.map((slot) => (
-                  <tr key={slot.id} className="hover:bg-gray-50/80 transition">
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-gray-900 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                        {slot.examDate}
-                      </div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3 text-gray-400" />
-                        {slot.startTime} - {slot.endTime}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-medium text-gray-800">
-                      {slot.class?.name} {slot.section ? `• Sec ${slot.section.name}` : ''}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-gray-900">{slot.subject?.name}</div>
-                      <div className="text-xs text-gray-400 font-mono">{slot.subject?.code}</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 text-xs text-gray-700">
-                        <MapPin className="w-3 h-3 text-gray-400" />
-                        {slot.roomNumber || 'TBD'}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      <div><span className="font-semibold text-gray-900">Total: {slot.maxMarks}</span> (Pass: {slot.passMarks})</div>
-                      <div className="text-gray-500">Th: {slot.theoryMaxMarks} | Pr: {slot.practicalMaxMarks}</div>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      {slot.invigilatorStaff ? (
-                        <div className="flex items-center gap-1 text-gray-800">
-                          <User className="w-3.5 h-3.5 text-gray-400" />
-                          <span>{slot.invigilatorStaff.firstName} {slot.invigilatorStaff.lastName}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href={`/exams/marks-entry?scheduleId=${slot.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
-                      >
-                        <FileSpreadsheet className="w-3.5 h-3.5" />
-                        Enter Marks
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {/* Class-wise Grouped Timetable */}
+      <div className="space-y-6">
+        {schedulesByClass.map(({ class: cls, schedules: classSchedules }) => (
+          <Card key={cls.id} className="p-6 bg-white border border-slate-200/80 rounded-3xl shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-slate-900">{cls.name}</h3>
+                  <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                    {cls.code}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-400">Level {cls.level}</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {classSchedules.length} examination paper{classSchedules.length === 1 ? '' : 's'} scheduled for this class.
+                </p>
+              </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl text-blue-600 border-blue-200 hover:bg-blue-50 text-xs font-bold"
+                onClick={() => handleOpenSlotModal(cls.id)}
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Add Subject Paper for {cls.name}
+              </Button>
+            </div>
+
+            {classSchedules.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-400">
+                No exam subject papers added for {cls.name} yet. Click &quot;Add Subject Paper&quot; above to schedule one.
+              </div>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-100">
+                    <tr>
+                      <th className="py-3 px-4">Exam Date & Time</th>
+                      <th className="py-3 px-4">Subject</th>
+                      <th className="py-3 px-4">Section / Room</th>
+                      <th className="py-3 px-4">Marks Rubric</th>
+                      <th className="py-3 px-4">Invigilator</th>
+                      <th className="py-3 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {classSchedules.map((slot) => (
+                      <tr key={slot.id} className="hover:bg-blue-50/40 transition">
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                            {slot.examDate?.split('T')[0]}
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 font-mono">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            {slot.startTime} - {slot.endTime}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900">{slot.subject?.name}</div>
+                          <div className="text-[11px] text-blue-600 font-mono font-semibold">
+                            {slot.subject?.code}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-medium text-slate-800">
+                            {slot.section ? `Sec ${slot.section.name}` : 'All Sections'}
+                          </div>
+                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            {slot.roomNumber || 'TBD'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div>
+                            <span className="font-bold text-slate-900">Total: {Number(slot.maxMarks) || 0}</span>
+                            <span className="text-emerald-600 font-semibold ml-1.5">Pass: {Number(slot.passMarks) || 0}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            Theory: {Number(slot.theoryMaxMarks) || 0} | Practical: {Number(slot.practicalMaxMarks) || 0}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {slot.invigilatorStaff ? (
+                            <div className="flex items-center gap-1 text-slate-800 font-medium">
+                              <User className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{slot.invigilatorStaff.firstName} {slot.invigilatorStaff.lastName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <Link
+                            href={`/exams/marks-entry?scheduleId=${slot.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                            Enter Marks
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
 
       {/* Add Paper Slot Modal */}
       <Modal
         isOpen={isSlotModalOpen}
         onClose={() => setIsSlotModalOpen(false)}
-        title="Schedule Exam Paper Slot"
+        title="Schedule Exam Subject Paper"
       >
         <form onSubmit={handleSlotSubmit} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg flex items-center gap-2 border border-red-200">
+            <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl flex items-center gap-2 border border-red-200">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -357,28 +472,30 @@ export default function ExamScheduleDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                Class *
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Target Class *
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-900 font-medium focus:ring-1 focus:ring-blue-500"
                 value={slotData.classId}
-                onChange={(e) => setSlotData({ ...slotData, classId: e.target.value, sectionId: '' })}
+                onChange={(e) => {
+                  setSlotData({ ...slotData, classId: e.target.value, sectionId: '', subjectId: '' });
+                }}
                 required
               >
                 <option value="">Select Class</option>
                 {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>{cls.name}</option>
+                  <option key={cls.id} value={cls.id}>{cls.name} ({cls.code})</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Section (Optional)
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-900 font-medium focus:ring-1 focus:ring-blue-500"
                 value={slotData.sectionId}
                 onChange={(e) => setSlotData({ ...slotData, sectionId: e.target.value })}
                 disabled={!slotData.classId}
@@ -392,25 +509,34 @@ export default function ExamScheduleDetailPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Subject *
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700">
+                Subject for this Class *
+              </label>
+              {classAssignedSubjects.length > 0 && (
+                <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">
+                  {classAssignedSubjects.length} class subjects loaded
+                </span>
+              )}
+            </div>
             <select
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-900 font-medium focus:ring-1 focus:ring-blue-500"
               value={slotData.subjectId}
-              onChange={(e) => setSlotData({ ...slotData, subjectId: e.target.value })}
+              onChange={(e) => handleSubjectChange(e.target.value)}
               required
             >
               <option value="">Select Subject</option>
-              {subjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>{sub.name} ({sub.code})</option>
+              {availableSubjects.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name} ({sub.code}) — Max: {(sub.theoryMaxMarks ?? 70) + (sub.practicalMaxMarks ?? 30)}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Exam Date *
               </label>
               <Input
@@ -421,7 +547,7 @@ export default function ExamScheduleDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Start Time *
               </label>
               <Input
@@ -432,7 +558,7 @@ export default function ExamScheduleDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 End Time *
               </label>
               <Input
@@ -446,7 +572,7 @@ export default function ExamScheduleDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Room / Hall Number
               </label>
               <Input
@@ -457,11 +583,11 @@ export default function ExamScheduleDetailPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Invigilator / Examiner
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-900 font-medium focus:ring-1 focus:ring-blue-500"
                 value={slotData.invigilatorStaffId}
                 onChange={(e) => setSlotData({ ...slotData, invigilatorStaffId: e.target.value })}
               >
@@ -475,7 +601,7 @@ export default function ExamScheduleDetailPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Max Marks *
               </label>
               <Input
@@ -486,7 +612,7 @@ export default function ExamScheduleDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Pass Marks *
               </label>
               <Input
@@ -497,7 +623,7 @@ export default function ExamScheduleDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Theory Max
               </label>
               <Input
@@ -507,7 +633,7 @@ export default function ExamScheduleDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Practical Max
               </label>
               <Input
@@ -518,20 +644,21 @@ export default function ExamScheduleDetailPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"
+              className="rounded-xl text-xs font-bold"
               onClick={() => setIsSlotModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20"
               disabled={addScheduleMutation.isPending}
             >
-              {addScheduleMutation.isPending ? 'Saving...' : 'Add Slot'}
+              {addScheduleMutation.isPending ? 'Saving...' : 'Add Subject to Exam'}
             </Button>
           </div>
         </form>

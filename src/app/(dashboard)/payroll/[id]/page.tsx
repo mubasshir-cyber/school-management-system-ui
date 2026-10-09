@@ -38,121 +38,20 @@ export default function PayrollBatchRegisterPage() {
     queryFn: () => payrollService.getPayrollById(payrollId),
   });
 
-  // Sample data fallback
-  const sampleItems: PayrollItem[] = [
-    {
-      id: 'item-1',
-      payrollId,
-      staffId: 'staff-1',
-      staff: {
-        id: 'staff-1',
-        employeeCode: 'EMP-2026-0001',
-        firstName: 'Dr. Robert',
-        lastName: 'Jenkins',
-        department: { name: 'Mathematics' },
-        designation: { title: 'Senior Teacher' },
-      },
-      basicSalary: 30000,
-      totalEarnings: 60000,
-      totalDeductions: 3800,
-      unpaidLeavesCount: 0,
-      lopDeductionAmount: 0,
-      netSalary: 56200,
-      breakdown: {
-        earnings: [
-          { name: 'Basic Salary', amount: 30000 },
-          { name: 'House Rent Allowance (HRA)', amount: 12000 },
-          { name: 'Special Allowance', amount: 18000 },
-        ],
-        deductions: [
-          { name: 'Provident Fund (PF)', amount: 3600 },
-          { name: 'Professional Tax', amount: 200 },
-        ],
-      },
-      status: 'PAID',
-      createdAt: '2026-09-30T10:00:00Z',
-    },
-    {
-      id: 'item-2',
-      payrollId,
-      staffId: 'staff-2',
-      staff: {
-        id: 'staff-2',
-        employeeCode: 'EMP-2026-0002',
-        firstName: 'Eleanor',
-        lastName: 'Pena',
-        department: { name: 'Science' },
-        designation: { title: 'Department Head' },
-      },
-      basicSalary: 35000,
-      totalEarnings: 70000,
-      totalDeductions: 4400,
-      unpaidLeavesCount: 0,
-      lopDeductionAmount: 0,
-      netSalary: 65600,
-      breakdown: {
-        earnings: [
-          { name: 'Basic Salary', amount: 35000 },
-          { name: 'House Rent Allowance (HRA)', amount: 14000 },
-          { name: 'Special Allowance', amount: 21000 },
-        ],
-        deductions: [
-          { name: 'Provident Fund (PF)', amount: 4200 },
-          { name: 'Professional Tax', amount: 200 },
-        ],
-      },
-      status: 'PAID',
-      createdAt: '2026-09-30T10:00:00Z',
-    },
-    {
-      id: 'item-3',
-      payrollId,
-      staffId: 'staff-3',
-      staff: {
-        id: 'staff-3',
-        employeeCode: 'EMP-2026-0003',
-        firstName: 'Guy',
-        lastName: 'Hawkins',
-        department: { name: 'Languages' },
-        designation: { title: 'Teacher' },
-      },
-      basicSalary: 22500,
-      totalEarnings: 45000,
-      totalDeductions: 4400,
-      unpaidLeavesCount: 1,
-      lopDeductionAmount: 1500,
-      netSalary: 40600,
-      breakdown: {
-        earnings: [
-          { name: 'Basic Salary', amount: 22500 },
-          { name: 'House Rent Allowance (HRA)', amount: 9000 },
-          { name: 'Special Allowance', amount: 13500 },
-        ],
-        deductions: [
-          { name: 'Provident Fund (PF)', amount: 2700 },
-          { name: 'Professional Tax', amount: 200 },
-          { name: 'Loss of Pay (1 Day)', amount: 1500 },
-        ],
-      },
-      status: 'PAID',
-      createdAt: '2026-09-30T10:00:00Z',
-    },
-  ];
-
   const currentPayroll = payroll || {
     id: payrollId,
-    month: 9,
-    year: 2026,
-    payrollTitle: 'Staff Salary Payroll - September 2026',
-    totalStaffCount: 3,
-    totalGrossAmount: 175000,
-    totalDeductionsAmount: 12600,
-    totalNetAmount: 162400,
-    status: 'CALCULATED' as any,
-    items: sampleItems,
+    month: 1,
+    year: new Date().getFullYear(),
+    payrollTitle: 'Staff Payroll',
+    totalStaffCount: 0,
+    totalGrossAmount: 0,
+    totalDeductionsAmount: 0,
+    totalNetAmount: 0,
+    status: 'DRAFT' as any,
+    items: [],
   };
 
-  const itemsList = currentPayroll.items || sampleItems;
+  const itemsList = payroll?.items || [];
 
   const handleApprove = async () => {
     try {

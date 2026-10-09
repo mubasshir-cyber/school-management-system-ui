@@ -64,55 +64,7 @@ export default function ExpensesPage() {
     queryFn: () => treasuryService.getAccounts(),
   });
 
-  // Sample data fallback
-  const sampleExpenses: Expense[] = [
-    {
-      id: '1',
-      expenseCategoryId: 'cat-1',
-      expenseCategory: { id: 'cat-1', name: 'Campus Maintenance & Repairs', code: 'MAINT', status: 'ACTIVE' },
-      title: 'Solar Inverter Annual AMC & Battery Replacement',
-      amount: 42000,
-      expenseDate: '2026-09-28',
-      paymentMethod: 'CHEQUE',
-      voucherNumber: 'VOU-2026-0012',
-      vendorName: 'SunTech Power Solutions Ltd.',
-      invoiceNumber: 'INV-ST-9041',
-      status: 'PAID',
-      paidAt: '2026-09-28T14:00:00Z',
-      createdAt: '2026-09-26T10:00:00Z',
-    },
-    {
-      id: '2',
-      expenseCategoryId: 'cat-2',
-      expenseCategory: { id: 'cat-2', name: 'Lab Consumables & Reagents', code: 'LAB_CON', status: 'ACTIVE' },
-      title: 'Chemistry & Biology Senior Secondary Lab Reagents',
-      amount: 18500,
-      expenseDate: '2026-09-29',
-      paymentMethod: 'BANK_TRANSFER',
-      voucherNumber: 'VOU-2026-0013',
-      vendorName: 'Apex Scientific Chemicals',
-      invoiceNumber: 'INV-ASC-491',
-      status: 'APPROVED',
-      approvedAt: '2026-09-29T16:00:00Z',
-      createdAt: '2026-09-28T11:00:00Z',
-    },
-    {
-      id: '3',
-      expenseCategoryId: 'cat-3',
-      expenseCategory: { id: 'cat-3', name: 'Electricity & Utilities', code: 'UTIL', status: 'ACTIVE' },
-      title: 'State Electricity Board Monthly High-Tension Bill',
-      amount: 85400,
-      expenseDate: '2026-09-30',
-      paymentMethod: 'BANK_TRANSFER',
-      voucherNumber: 'VOU-2026-0014',
-      vendorName: 'State Electricity Distribution Co.',
-      status: 'PENDING',
-      createdAt: '2026-09-30T09:00:00Z',
-    },
-  ];
-
-  const expenseList =
-    expensesData?.items && expensesData.items.length > 0 ? expensesData.items : sampleExpenses;
+  const expenseList = expensesData?.items || [];
 
   const handleClaim = async (e: React.FormEvent) => {
     e.preventDefault();

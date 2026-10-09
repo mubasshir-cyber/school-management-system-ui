@@ -57,11 +57,7 @@ function FeeCollectContent() {
     enabled: !!selectedStudentId,
   });
 
-  const studentList = studentsData?.items || [
-    { id: 'stu-1', studentCode: 'STU-2026-0001', firstName: 'Ahmed', lastName: 'Khan', class: { name: 'Grade 5' } },
-    { id: 'stu-2', studentCode: 'STU-2026-0002', firstName: 'Priya', lastName: 'Sharma', class: { name: 'Grade 5' } },
-    { id: 'stu-3', studentCode: 'STU-2026-0003', firstName: 'Rohan', lastName: 'Patel', class: { name: 'Grade 5' } },
-  ];
+  const studentList = studentsData?.items || [];
 
   const currentStudent = studentList.find((s) => s.id === selectedStudentId);
 

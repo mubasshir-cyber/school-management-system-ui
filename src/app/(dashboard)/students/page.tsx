@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
@@ -11,6 +12,7 @@ import {
   Download,
   MoreVertical,
   ChevronRight,
+  GraduationCap,
 } from 'lucide-react';
 import { studentService } from '../../../services/student.service';
 import { academicService } from '../../../services/academic.service';
@@ -21,33 +23,47 @@ import { DataTable, Column } from '../../../components/tables/data-table';
 import { Select } from '../../../components/ui/select';
 
 export default function StudentsDirectoryPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('');
-  const [academicYear, setAcademicYear] = useState<string>('2025-26');
+  const [academicYear, setAcademicYear] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
   const [sectionId, setSectionId] = useState<string>('');
   const [page, setPage] = useState(1);
 
+  const { data: academicYears = [] } = useQuery({
+    queryKey: ['academic-years'],
+    queryFn: academicService.getAcademicYears,
+  });
+
+  useEffect(() => {
+    if (!academicYear && academicYears.length > 0) {
+      const active = academicYears.find((y) => y.isCurrent);
+      if (active) setAcademicYear(active.id);
+    }
+  }, [academicYears, academicYear]);
+
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
-    queryFn: () => academicService.getClasses(),
+    queryKey: ['classes', academicYear],
+    queryFn: () => academicService.getClasses(academicYear || undefined),
   });
 
   const { data: sections = [] } = useQuery({
-    queryKey: ['sections', classId],
-    queryFn: () => academicService.getSections(classId || undefined),
+    queryKey: ['sections', classId, academicYear],
+    queryFn: () => academicService.getSections(classId || undefined, academicYear || undefined),
     enabled: !!classId,
   });
 
   const { data: studentsData, isLoading } = useQuery({
-    queryKey: ['students', { search, status, classId, sectionId, page }],
+    queryKey: ['students', { search, status, classId, sectionId, academicYear, page }],
     queryFn: () =>
       studentService.getStudents({
         search: search || undefined,
         status: status || undefined,
         classId: classId || undefined,
         sectionId: sectionId || undefined,
+        academicYearId: academicYear || undefined,
         page,
         limit: 10,
       }),
@@ -60,72 +76,40 @@ export default function StudentsDirectoryPage() {
     },
   });
 
-  // Mock fallback data matching Mockup 4 if database is fresh
-  const fallbackStudents = [
-    {
-      id: '1',
-      studentCode: 'STU-2026-0001',
-      firstName: 'Ahmed',
-      lastName: 'Khan',
-      email: 'ahmed.khan@example.com',
-      gender: 'Male',
-      status: 'ACTIVE',
-      guardianName: 'Mohammed Khan',
-      enrollments: [{ class: { name: 'Grade 5' }, section: { name: 'A' } }],
-    },
-    {
-      id: '2',
-      studentCode: 'STU-2026-0002',
-      firstName: 'Priya',
-      lastName: 'Sharma',
-      email: 'priya.sharma@example.com',
-      gender: 'Female',
-      status: 'ACTIVE',
-      guardianName: 'Rajesh Sharma',
-      enrollments: [{ class: { name: 'Grade 5' }, section: { name: 'B' } }],
-    },
-    {
-      id: '3',
-      studentCode: 'STU-2026-0003',
-      firstName: 'Rohan',
-      lastName: 'Patel',
-      email: 'rohan.patel@example.com',
-      gender: 'Male',
-      status: 'ACTIVE',
-      guardianName: 'Kiran Patel',
-      enrollments: [{ class: { name: 'Grade 4' }, section: { name: 'A' } }],
-    },
-    {
-      id: '4',
-      studentCode: 'STU-2026-0004',
-      firstName: 'Sara',
-      lastName: 'Ali',
-      email: 'sara.ali@example.com',
-      gender: 'Female',
-      status: 'INACTIVE',
-      guardianName: 'Tariq Ali',
-      enrollments: [{ class: { name: 'Grade 4' }, section: { name: 'A' } }],
-    },
-    {
-      id: '5',
-      studentCode: 'STU-2026-0005',
-      firstName: 'Vikram',
-      lastName: 'Singh',
-      email: 'vikram.singh@example.com',
-      gender: 'Male',
-      status: 'ACTIVE',
-      guardianName: 'Harpreet Singh',
-      enrollments: [{ class: { name: 'Grade 7' }, section: { name: 'A' } }],
-    },
-  ];
+  const displayStudents = studentsData?.items || [];
+  const totalCount = studentsData?.total || 0;
+  const totalPages = studentsData?.totalPages || 1;
 
-  const displayStudents =
-    studentsData?.items && studentsData.items.length > 0
-      ? studentsData.items
-      : fallbackStudents;
+function StudentAvatar({
+  photoUrl,
+  firstName,
+  lastName,
+}: {
+  photoUrl?: string;
+  firstName?: string;
+  lastName?: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+  const isValidPhoto = !!photoUrl && !hasError && (photoUrl.startsWith('data:') || photoUrl.startsWith('http') || photoUrl.startsWith('/'));
 
-  const totalCount = studentsData?.total || 1738;
-  const totalPages = studentsData?.totalPages || 348;
+  return (
+    <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] text-white font-bold text-xs flex items-center justify-center shrink-0 border border-[#E5EAF1] shadow-2xs">
+      {isValidPhoto ? (
+        <img
+          src={photoUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <span className="select-none">
+          {firstName?.[0] || 'S'}
+          {lastName?.[0] || ''}
+        </span>
+      )}
+    </div>
+  );
+}
 
   const columns: Column<any>[] = [
     {
@@ -135,29 +119,26 @@ export default function StudentsDirectoryPage() {
       render: (_, idx) => (page - 1) * 10 + idx + 1,
     },
     {
-      key: 'photo',
-      header: 'Photo',
-      className: 'w-14',
-      render: (row) => (
-        <div className="w-8 h-8 rounded-full bg-[#2563EB]/10 text-[#2563EB] font-bold text-xs flex items-center justify-center border border-[#2563EB]/20">
-          {row.firstName?.[0] || 'S'}
-        </div>
-      ),
-    },
-    {
       key: 'name',
       header: 'Student Name',
       sortable: true,
       render: (row) => (
         <Link
           href={`/students/${row.id}`}
-          className="group hover:text-[#2563EB] transition-colors"
+          className="group flex items-center gap-3 hover:text-[#2563EB] transition-colors"
         >
-          <div className="font-semibold text-[#172033] group-hover:text-[#2563EB] text-xs lg:text-sm">
-            {row.firstName} {row.lastName}
-          </div>
-          <div className="text-[11px] text-[#98A2B3]">
-            {row.email || `${row.firstName.toLowerCase()}@example.com`}
+          <StudentAvatar
+            photoUrl={row.photoUrl}
+            firstName={row.firstName}
+            lastName={row.lastName}
+          />
+          <div>
+            <div className="font-semibold text-[#172033] group-hover:text-[#2563EB] text-xs lg:text-sm">
+              {row.firstName} {row.lastName}
+            </div>
+            <div className="text-[11px] text-[#98A2B3]">
+              {row.email || `${row.firstName?.toLowerCase() || 'student'}@school.edu`}
+            </div>
           </div>
         </Link>
       ),
@@ -253,6 +234,11 @@ export default function StudentsDirectoryPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by name, code, admission no..."
+        emptyTitle="No students yet"
+        emptyDescription="There are no students registered in the system yet. Click below to add your first student."
+        emptyActionLabel="+ Add Student"
+        onEmptyAction={() => router.push('/students/new')}
+        emptyIcon={GraduationCap}
         currentPage={page}
         totalPages={totalPages}
         totalItems={totalCount}
@@ -264,8 +250,12 @@ export default function StudentsDirectoryPage() {
               onChange={(e) => setAcademicYear(e.target.value)}
               className="h-9 px-3 text-xs bg-[#F8FAFC] border border-[#E5EAF1] rounded-lg text-[#172033] focus:outline-none focus:border-[#2563EB]"
             >
-              <option value="2025-26">Academic Year 2025-26</option>
-              <option value="2026-27">Academic Year 2026-27</option>
+              <option value="">All Academic Years</option>
+              {academicYears.map((ay) => (
+                <option key={ay.id} value={ay.id}>
+                  {ay.name} {ay.isCurrent ? '(Active)' : ''}
+                </option>
+              ))}
             </select>
 
             <select
@@ -326,7 +316,7 @@ export default function StudentsDirectoryPage() {
                   {row.studentCode}
                 </p>
                 <p className="text-[10px] text-[#98A2B3]">
-                  Grade 5 • Section A • Guardian: {row.guardianName || 'Parent'}
+                  {row.enrollments?.[0]?.class?.name || 'Class'} • {row.enrollments?.[0]?.section?.name ? `Section ${row.enrollments[0].section.name}` : ''}
                 </p>
               </div>
             </div>

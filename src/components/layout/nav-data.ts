@@ -58,7 +58,6 @@ export const navigationGroups: NavGroup[] = [
     items: [
       { name: 'All Students', href: '/students', icon: Users },
       { name: 'New Registration', href: '/students/new', icon: UserPlus, badge: 'Wizard' },
-      { name: 'Admissions Pipeline', href: '/admissions', icon: ClipboardList, badge: 'Active' },
       { name: 'Guardians Master', href: '/guardians', icon: HeartHandshake },
       { name: 'Enrollment History', href: '/enrollments', icon: GraduationCap },
     ],
@@ -133,3 +132,24 @@ export const mobileBottomNavItems = [
   { name: 'Fees', href: '/fees', icon: CreditCard },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
+
+export const allNavHrefs: string[] = navigationGroups.flatMap((group) =>
+  group.items.map((item) => item.href),
+);
+
+export function isRouteActive(currentPath: string, itemHref: string): boolean {
+  if (currentPath === itemHref) return true;
+  if (allNavHrefs.includes(currentPath)) return false;
+
+  if (itemHref !== '/' && itemHref !== '/dashboard' && currentPath.startsWith(itemHref + '/')) {
+    const hasMoreSpecificMatch = allNavHrefs.some(
+      (otherHref) =>
+        otherHref !== itemHref &&
+        otherHref.startsWith(itemHref) &&
+        (currentPath === otherHref || currentPath.startsWith(otherHref + '/')),
+    );
+    return !hasMoreSpecificMatch;
+  }
+
+  return false;
+}

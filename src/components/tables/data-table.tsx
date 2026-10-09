@@ -39,6 +39,9 @@ export interface DataTableProps<T> {
   actionsSlot?: React.ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
+  emptyActionLabel?: string;
+  onEmptyAction?: () => void;
+  emptyIcon?: any;
   currentPage?: number;
   totalPages?: number;
   totalItems?: number;
@@ -61,6 +64,9 @@ export function DataTable<T>({
   actionsSlot,
   emptyTitle = 'No records found',
   emptyDescription = 'There are no items matching your criteria.',
+  emptyActionLabel,
+  onEmptyAction,
+  emptyIcon,
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
@@ -135,6 +141,9 @@ export function DataTable<T>({
         <EmptyState
           title={emptyTitle}
           description={emptyDescription}
+          icon={emptyIcon}
+          actionLabel={emptyActionLabel}
+          onAction={onEmptyAction}
           className="border-none rounded-none py-12"
         />
       ) : (

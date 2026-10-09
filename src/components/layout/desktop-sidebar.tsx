@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { navigationGroups } from './nav-data';
+import { navigationGroups, isRouteActive } from './nav-data';
 import { useAuthStore } from '../../stores/auth.store';
 import {
   GraduationCap,
@@ -47,7 +47,7 @@ export function DesktopSidebar() {
         {navigationGroups.map((group) => {
           const isCollapsed = !!collapsedGroups[group.name];
           const hasActiveChild = group.items.some((item) =>
-            pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)),
+            isRouteActive(pathname, item.href),
           );
 
           return (
@@ -75,9 +75,7 @@ export function DesktopSidebar() {
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
-                    const isActive =
-                      pathname === item.href ||
-                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                    const isActive = isRouteActive(pathname, item.href);
 
                     return (
                       <Link

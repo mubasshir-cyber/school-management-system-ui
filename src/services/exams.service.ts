@@ -226,6 +226,15 @@ export const examsService = {
     return res.data.data || res.data;
   },
 
+  updateSchedule: async (id: string, data: Partial<ExamSchedule>): Promise<ExamSchedule> => {
+    const res = await apiClient.patch(`/exams/schedules/${id}`, data);
+    return res.data.data || res.data;
+  },
+
+  deleteSchedule: async (id: string): Promise<void> => {
+    await apiClient.delete(`/exams/schedules/${id}`);
+  },
+
   // Marks Entry
   getMarksBySchedule: async (scheduleId: string): Promise<ExamScheduleMarksResponse> => {
     const res = await apiClient.get(`/exams/schedules/${scheduleId}/marks`);

@@ -42,76 +42,7 @@ export default function StudentLedgerPage() {
     queryFn: () => feeService.getStudentLedger(studentId),
   });
 
-  // Sample data fallback
-  const sampleLedger: FeeLedgerEntry[] = [
-    {
-      id: '1',
-      studentId,
-      academicYearId: 'ay-1',
-      transactionDate: '2026-06-01',
-      entryType: 'DEBIT',
-      category: 'INVOICE',
-      amount: 15000,
-      balanceAfter: 15000,
-      referenceNumber: 'INV-2026-0001',
-      description: 'Term 1 Tuition & Annual Charges Billed',
-      createdAt: '2026-06-01T08:00:00Z',
-    },
-    {
-      id: '2',
-      studentId,
-      academicYearId: 'ay-1',
-      transactionDate: '2026-06-05',
-      entryType: 'CREDIT',
-      category: 'DISCOUNT',
-      amount: 3000,
-      balanceAfter: 12000,
-      referenceNumber: 'DISC-SIB-20',
-      description: 'Sibling Concession 20% Applied',
-      createdAt: '2026-06-05T09:30:00Z',
-    },
-    {
-      id: '3',
-      studentId,
-      academicYearId: 'ay-1',
-      transactionDate: '2026-06-12',
-      entryType: 'CREDIT',
-      category: 'PAYMENT',
-      amount: 7000,
-      balanceAfter: 5000,
-      referenceNumber: 'REC-2026-00142',
-      description: 'Part Payment via UPI (Ref: 9823481239)',
-      createdAt: '2026-06-12T11:20:00Z',
-    },
-    {
-      id: '4',
-      studentId,
-      academicYearId: 'ay-1',
-      transactionDate: '2026-08-01',
-      entryType: 'DEBIT',
-      category: 'INVOICE',
-      amount: 5000,
-      balanceAfter: 10000,
-      referenceNumber: 'INV-2026-00104',
-      description: 'Term 2 Tuition Fee Billed',
-      createdAt: '2026-08-01T08:00:00Z',
-    },
-    {
-      id: '5',
-      studentId,
-      academicYearId: 'ay-1',
-      transactionDate: '2026-08-10',
-      entryType: 'CREDIT',
-      category: 'PAYMENT',
-      amount: 10000,
-      balanceAfter: 0,
-      referenceNumber: 'REC-2026-00199',
-      description: 'Full Balance Settlement via Net Banking',
-      createdAt: '2026-08-10T14:40:00Z',
-    },
-  ];
-
-  const ledgerEntries = ledgerData.length > 0 ? ledgerData : sampleLedger;
+  const ledgerEntries = ledgerData;
 
   const totalDebited = ledgerEntries
     .filter((e) => e.entryType === 'DEBIT')

@@ -86,51 +86,9 @@ export default function FeeStructuresPage() {
     queryFn: () => academicService.getClasses(),
   });
 
-  // Sample data fallback
-  const sampleStructures: FeeStructure[] = [
-    {
-      id: '1',
-      academicYearId: 'ay-1',
-      name: 'Primary Standard Fee Structure',
-      code: 'FEE-PRI-2026',
-      frequency: 'MONTHLY',
-      description: 'Monthly tuition, transport and activity fees for Grades 1-5',
-      status: 'ACTIVE',
-      items: [
-        { id: '1', feeTypeId: 'ft-1', feeType: { id: '1', name: 'Tuition Fee', code: 'TUI', isOptional: false, status: 'ACTIVE' }, amount: 4500, dueDayOfMonth: 10, lateFineAmount: 100, graceDays: 5 },
-        { id: '2', feeTypeId: 'ft-2', feeType: { id: '2', name: 'Computer Lab Fee', code: 'LAB', isOptional: false, status: 'ACTIVE' }, amount: 500, dueDayOfMonth: 10, lateFineAmount: 50, graceDays: 5 },
-      ],
-    },
-    {
-      id: '2',
-      academicYearId: 'ay-1',
-      name: 'Middle School Standard Fee Structure',
-      code: 'FEE-MID-2026',
-      frequency: 'QUARTERLY',
-      description: 'Quarterly fees for Grades 6-8',
-      status: 'ACTIVE',
-      items: [
-        { id: '3', feeTypeId: 'ft-1', feeType: { id: '1', name: 'Tuition Fee', code: 'TUI', isOptional: false, status: 'ACTIVE' }, amount: 15000, dueDayOfMonth: 10, lateFineAmount: 250, graceDays: 7 },
-      ],
-    },
-  ];
-
-  const sampleHeads: FeeType[] = [
-    { id: '1', name: 'Tuition Fee', code: 'TUI', description: 'Core academic instruction fee', isOptional: false, accountCode: 'ACC-4001', status: 'ACTIVE' },
-    { id: '2', name: 'Computer Lab Fee', code: 'LAB', description: 'Technology & practical sessions', isOptional: false, accountCode: 'ACC-4002', status: 'ACTIVE' },
-    { id: '3', name: 'School Bus Transport', code: 'TRANS', description: 'Zone-based daily pickup & drop', isOptional: true, accountCode: 'ACC-4003', status: 'ACTIVE' },
-    { id: '4', name: 'Annual Sports & Activity Fee', code: 'SPORTS', description: 'Athletics & cultural festival charges', isOptional: false, accountCode: 'ACC-4004', status: 'ACTIVE' },
-  ];
-
-  const sampleDiscounts: FeeDiscount[] = [
-    { id: '1', name: 'Sibling Concession', code: 'SIB-20', discountType: 'PERCENTAGE', value: 20, reason: 'Applied for second enrolled sibling', status: 'ACTIVE' },
-    { id: '2', name: 'Merit Scholarship', code: 'MERIT-50', discountType: 'PERCENTAGE', value: 50, reason: 'Awarded to top 5% rank holders', status: 'ACTIVE' },
-    { id: '3', name: 'Staff Child Waiver', code: 'STAFF-100', discountType: 'PERCENTAGE', value: 100, reason: 'Full tuition exemption for faculty wards', status: 'ACTIVE' },
-  ];
-
-  const structureList = structuresData.length > 0 ? structuresData : sampleStructures;
-  const headList = feeTypes.length > 0 ? feeTypes : sampleHeads;
-  const discountList = discounts.length > 0 ? discounts : sampleDiscounts;
+  const structureList = structuresData;
+  const headList = feeTypes;
+  const discountList = discounts;
 
   const handleCreateHead = async (e: React.FormEvent) => {
     e.preventDefault();

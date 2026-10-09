@@ -62,45 +62,8 @@ export default function SalaryStructuresPage() {
     queryFn: () => payrollService.getComponents(),
   });
 
-  // Sample data fallback
-  const sampleStructures: SalaryStructure[] = [
-    {
-      id: '1',
-      name: 'Senior Teaching Faculty Structure (PGT/TGT)',
-      code: 'SAL-FAC-SR',
-      description: 'Standard pay scale for senior secondary educators',
-      status: 'ACTIVE',
-      items: [
-        { id: '1', salaryComponentId: '1', salaryComponent: { id: '1', name: 'Basic Salary', code: 'BASIC', componentType: 'EARNING', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 50, isTaxable: true, isStatutory: false, status: 'ACTIVE' }, calculationType: 'PERCENTAGE_OF_BASIC', value: 50 },
-        { id: '2', salaryComponentId: '2', salaryComponent: { id: '2', name: 'House Rent Allowance (HRA)', code: 'HRA', componentType: 'EARNING', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 40, isTaxable: true, isStatutory: false, status: 'ACTIVE' }, calculationType: 'PERCENTAGE_OF_BASIC', value: 40 },
-        { id: '3', salaryComponentId: '3', salaryComponent: { id: '3', name: 'Provident Fund (PF)', code: 'PF', componentType: 'DEDUCTION', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 12, isTaxable: false, isStatutory: true, status: 'ACTIVE' }, calculationType: 'PERCENTAGE_OF_BASIC', value: 12 },
-      ],
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-    {
-      id: '2',
-      name: 'Administrative & Support Staff Structure',
-      code: 'SAL-ADMIN-01',
-      description: 'Standard pay scale for office, accounts, and lab support staff',
-      status: 'ACTIVE',
-      items: [
-        { id: '4', salaryComponentId: '1', salaryComponent: { id: '1', name: 'Basic Salary', code: 'BASIC', componentType: 'EARNING', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 50, isTaxable: true, isStatutory: false, status: 'ACTIVE' }, calculationType: 'PERCENTAGE_OF_BASIC', value: 50 },
-        { id: '5', salaryComponentId: '3', salaryComponent: { id: '3', name: 'Provident Fund (PF)', code: 'PF', componentType: 'DEDUCTION', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 12, isTaxable: false, isStatutory: true, status: 'ACTIVE' }, calculationType: 'PERCENTAGE_OF_BASIC', value: 12 },
-      ],
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-  ];
-
-  const sampleComponents: SalaryComponent[] = [
-    { id: '1', name: 'Basic Salary', code: 'BASIC', componentType: 'EARNING', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 50, isTaxable: true, isStatutory: false, description: 'Base component (50% of gross)', status: 'ACTIVE' },
-    { id: '2', name: 'House Rent Allowance (HRA)', code: 'HRA', componentType: 'EARNING', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 40, isTaxable: true, isStatutory: false, description: 'Housing assistance allowance', status: 'ACTIVE' },
-    { id: '3', name: 'Special Allowance', code: 'SPL_ALW', componentType: 'EARNING', calculationType: 'FIXED', defaultValue: 10000, isTaxable: true, isStatutory: false, description: 'Performance and grade pay supplement', status: 'ACTIVE' },
-    { id: '4', name: 'Provident Fund (PF)', code: 'PF', componentType: 'DEDUCTION', calculationType: 'PERCENTAGE_OF_BASIC', defaultValue: 12, isTaxable: false, isStatutory: true, description: 'Statutory employee retirement deduction', status: 'ACTIVE' },
-    { id: '5', name: 'Professional Tax (PT)', code: 'PT', componentType: 'DEDUCTION', calculationType: 'FIXED', defaultValue: 200, isTaxable: false, isStatutory: true, description: 'State professional tax levy', status: 'ACTIVE' },
-  ];
-
-  const structureList = structuresData.length > 0 ? structuresData : sampleStructures;
-  const componentList = componentsData.length > 0 ? componentsData : sampleComponents;
+  const structureList = structuresData;
+  const componentList = componentsData;
 
   const handleCreateComponent = async (e: React.FormEvent) => {
     e.preventDefault();

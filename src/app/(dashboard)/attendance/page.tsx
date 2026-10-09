@@ -50,25 +50,10 @@ export default function StudentAttendancePage() {
     queryFn: () => studentService.getStudents({ classId: classId || undefined, sectionId: sectionId || undefined, limit: 50 }),
   });
 
-  // Local Attendance State matching Mockup 10
-  const [attendanceMap, setAttendanceMap] = useState<Record<string, 'PRESENT' | 'ABSENT' | 'LATE' | 'LEAVE'>>({
-    '1': 'PRESENT',
-    '2': 'PRESENT',
-    '3': 'ABSENT',
-    '4': 'PRESENT',
-    '5': 'PRESENT',
-  });
+  // Local Attendance State
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, 'PRESENT' | 'ABSENT' | 'LATE' | 'LEAVE'>>({});
 
-  const sampleStudents = [
-    { id: '1', studentCode: 'STU-2026-0001', firstName: 'Ahmed', lastName: 'Khan', class: 'Grade 5', section: 'A' },
-    { id: '2', studentCode: 'STU-2026-0002', firstName: 'Priya', lastName: 'Sharma', class: 'Grade 5', section: 'A' },
-    { id: '3', studentCode: 'STU-2026-0003', firstName: 'Rohan', lastName: 'Patel', class: 'Grade 5', section: 'A' },
-    { id: '4', studentCode: 'STU-2026-0004', firstName: 'Sara', lastName: 'Ali', class: 'Grade 5', section: 'A' },
-    { id: '5', studentCode: 'STU-2026-0005', firstName: 'Vikram', lastName: 'Singh', class: 'Grade 5', section: 'A' },
-  ];
-
-  const studentList =
-    studentsData?.items && studentsData.items.length > 0 ? studentsData.items : sampleStudents;
+  const studentList = studentsData?.items || [];
 
   const updateStatus = (id: string, status: 'PRESENT' | 'ABSENT' | 'LATE' | 'LEAVE') => {
     setAttendanceMap((prev) => ({ ...prev, [id]: status }));
@@ -110,7 +95,7 @@ export default function StudentAttendancePage() {
   const absentCount = Object.values(attendanceMap).filter((s) => s === 'ABSENT').length;
   const lateCount = Object.values(attendanceMap).filter((s) => s === 'LATE').length;
   const totalCount = studentList.length;
-  const attendanceRate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : '94.2';
+  const attendanceRate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : '0';
 
   const columns: Column<any>[] = [
     {

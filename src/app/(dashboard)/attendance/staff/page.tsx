@@ -58,105 +58,23 @@ export default function StaffAttendancePage() {
     queryFn: () => staffService.getStaffList({ departmentId: departmentId || undefined, limit: 50 }),
   });
 
-  // Local Attendance State
-  const sampleStaff: StaffAttendanceRow[] = [
-    {
-      id: '1',
-      employeeCode: 'EMP-2026-0001',
-      firstName: 'Dr. Robert',
-      lastName: 'Jenkins',
-      departmentName: 'Mathematics',
-      designationTitle: 'Senior Teacher',
-      status: 'PRESENT',
-      checkInTime: '08:15',
-      checkOutTime: '16:00',
-      isLate: false,
-      isHalfDay: false,
-      remarks: '',
-    },
-    {
-      id: '2',
-      employeeCode: 'EMP-2026-0002',
-      firstName: 'Eleanor',
-      lastName: 'Pena',
-      departmentName: 'Science',
-      designationTitle: 'Department Head',
-      status: 'PRESENT',
-      checkInTime: '08:25',
-      checkOutTime: '16:05',
-      isLate: false,
-      isHalfDay: false,
-      remarks: '',
-    },
-    {
-      id: '3',
-      employeeCode: 'EMP-2026-0003',
-      firstName: 'Guy',
-      lastName: 'Hawkins',
-      departmentName: 'Languages',
-      designationTitle: 'Teacher',
-      status: 'LATE',
-      checkInTime: '09:10',
-      checkOutTime: '16:00',
-      isLate: true,
-      isHalfDay: false,
-      remarks: 'Traffic delay',
-    },
-    {
-      id: '4',
-      employeeCode: 'EMP-2026-0004',
-      firstName: 'Savannah',
-      lastName: 'Nguyen',
-      departmentName: 'Administration',
-      designationTitle: 'HR Officer',
-      status: 'LEAVE',
-      checkInTime: '',
-      checkOutTime: '',
-      isLate: false,
-      isHalfDay: false,
-      remarks: 'Approved medical leave',
-    },
-    {
-      id: '5',
-      employeeCode: 'EMP-2026-0005',
-      firstName: 'Cameron',
-      lastName: 'Williamson',
-      departmentName: 'Information Technology',
-      designationTitle: 'IT Coordinator',
-      status: 'PRESENT',
-      checkInTime: '08:00',
-      checkOutTime: '16:30',
-      isLate: false,
-      isHalfDay: false,
-      remarks: '',
-    },
-  ];
+  const [attendanceState, setAttendanceState] = useState<Record<string, StaffAttendanceRow>>({});
 
-  const [attendanceState, setAttendanceState] = useState<Record<string, StaffAttendanceRow>>(() => {
-    const map: Record<string, StaffAttendanceRow> = {};
-    sampleStaff.forEach((s) => {
-      map[s.id] = s;
-    });
-    return map;
-  });
-
-  const staffList =
-    staffData?.items && staffData.items.length > 0
-      ? staffData.items.map((s) => ({
-          id: s.id,
-          employeeCode: s.employeeCode,
-          firstName: s.firstName,
-          lastName: s.lastName,
-          departmentName: s.department?.name || 'Academic',
-          designationTitle: s.designation?.title || 'Staff',
-          status: (attendanceState[s.id]?.status || 'PRESENT') as 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE',
-          checkInTime: attendanceState[s.id]?.checkInTime || '08:15',
-          checkOutTime: attendanceState[s.id]?.checkOutTime || '16:00',
-          isLate: attendanceState[s.id]?.isLate || false,
-          isHalfDay: attendanceState[s.id]?.isHalfDay || false,
-          remarks: attendanceState[s.id]?.remarks || '',
-        }))
-      : Object.values(attendanceState);
+  const staffList: StaffAttendanceRow[] =
+    (staffData?.items || []).map((s) => ({
+      id: s.id,
+      employeeCode: s.employeeCode,
+      firstName: s.firstName,
+      lastName: s.lastName,
+      departmentName: s.department?.name || 'Academic',
+      designationTitle: s.designation?.title || 'Staff',
+      status: (attendanceState[s.id]?.status || 'PRESENT') as 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE',
+      checkInTime: attendanceState[s.id]?.checkInTime || '08:15',
+      checkOutTime: attendanceState[s.id]?.checkOutTime || '16:00',
+      isLate: attendanceState[s.id]?.isLate || false,
+      isHalfDay: attendanceState[s.id]?.isHalfDay || false,
+      remarks: attendanceState[s.id]?.remarks || '',
+    }));
 
   const updateStaffStatus = (id: string, status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE') => {
     setAttendanceState((prev) => ({

@@ -48,49 +48,7 @@ export default function PayrollHubPage() {
     queryFn: () => payrollService.getPayrolls(),
   });
 
-  // Sample data fallback
-  const samplePayrolls: Payroll[] = [
-    {
-      id: '1',
-      month: 9,
-      year: 2026,
-      payrollTitle: 'Faculty & Administrative Staff Payroll - September 2026',
-      totalStaffCount: 42,
-      totalGrossAmount: 1850000,
-      totalDeductionsAmount: 240000,
-      totalNetAmount: 1610000,
-      status: 'PAID',
-      paidAt: '2026-09-30T10:00:00Z',
-      createdAt: '2026-09-28T09:00:00Z',
-    },
-    {
-      id: '2',
-      month: 8,
-      year: 2026,
-      payrollTitle: 'Faculty & Administrative Staff Payroll - August 2026',
-      totalStaffCount: 42,
-      totalGrossAmount: 1850000,
-      totalDeductionsAmount: 232000,
-      totalNetAmount: 1618000,
-      status: 'PAID',
-      paidAt: '2026-08-31T10:00:00Z',
-      createdAt: '2026-08-28T09:00:00Z',
-    },
-    {
-      id: '3',
-      month: 10,
-      year: 2026,
-      payrollTitle: 'Staff Salary Payroll - October 2026',
-      totalStaffCount: 42,
-      totalGrossAmount: 1850000,
-      totalDeductionsAmount: 228000,
-      totalNetAmount: 1622000,
-      status: 'CALCULATED',
-      createdAt: '2026-09-30T18:00:00Z',
-    },
-  ];
-
-  const payrollList = payrollsData.length > 0 ? payrollsData : samplePayrolls;
+  const payrollList = payrollsData;
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();

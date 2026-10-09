@@ -94,6 +94,11 @@ export const academicService = {
     return res.data.data;
   },
 
+  updateAcademicYear: async (id: string, data: Partial<AcademicYear>): Promise<AcademicYear> => {
+    const res = await apiClient.patch(`/academic-years/${id}`, data);
+    return res.data.data;
+  },
+
   setCurrentAcademicYear: async (id: string): Promise<AcademicYear> => {
     const res = await apiClient.post(`/academic-years/${id}/set-current`);
     return res.data.data;
@@ -108,6 +113,11 @@ export const academicService = {
 
   createClass: async (data: any): Promise<ClassItem> => {
     const res = await apiClient.post('/classes', data);
+    return res.data.data;
+  },
+
+  updateClass: async (id: string, data: any): Promise<ClassItem> => {
+    const res = await apiClient.patch(`/classes/${id}`, data);
     return res.data.data;
   },
 
@@ -129,6 +139,11 @@ export const academicService = {
     return res.data.data;
   },
 
+  updateSection: async (id: string, data: any): Promise<SectionItem> => {
+    const res = await apiClient.patch(`/sections/${id}`, data);
+    return res.data.data;
+  },
+
   deleteSection: async (id: string): Promise<void> => {
     await apiClient.delete(`/sections/${id}`);
   },
@@ -141,6 +156,11 @@ export const academicService = {
 
   createSubject: async (data: any): Promise<SubjectItem> => {
     const res = await apiClient.post('/subjects', data);
+    return res.data.data;
+  },
+
+  updateSubject: async (id: string, data: any): Promise<SubjectItem> => {
+    const res = await apiClient.patch(`/subjects/${id}`, data);
     return res.data.data;
   },
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
@@ -23,6 +24,7 @@ import { KpiCard } from '../../../components/ui/kpi-card';
 import { DataTable, Column } from '../../../components/tables/data-table';
 
 export default function StaffDirectoryPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [departmentId, setDepartmentId] = useState('');
@@ -63,95 +65,9 @@ export default function StaffDirectoryPage() {
     },
   });
 
-  // Mock sample staff if database is fresh
-  const fallbackStaff: StaffMember[] = [
-    {
-      id: '1',
-      employeeCode: 'EMP-2026-0001',
-      firstName: 'Brandon',
-      lastName: 'Sephton',
-      email: 'brandon.sephton@school.edu',
-      phone: '+91 98765 43210',
-      gender: 'Male',
-      dateOfBirth: '1988-04-15',
-      dateOfJoining: '2022-06-01',
-      employmentType: 'FULL_TIME',
-      department: { id: 'd1', name: 'Mathematics', code: 'MATH', status: 'ACTIVE', createdAt: '' },
-      designation: { id: 'des1', title: 'Senior Lecturer', code: 'SR-LEC', level: 3, status: 'ACTIVE', createdAt: '' },
-      status: 'ACTIVE',
-      createdAt: '',
-    },
-    {
-      id: '2',
-      employeeCode: 'EMP-2026-0002',
-      firstName: 'Ayesha',
-      lastName: 'Patel',
-      email: 'ayesha.patel@school.edu',
-      phone: '+91 98765 43211',
-      gender: 'Female',
-      dateOfBirth: '1992-08-20',
-      dateOfJoining: '2023-01-15',
-      employmentType: 'FULL_TIME',
-      department: { id: 'd2', name: 'Science', code: 'SCI', status: 'ACTIVE', createdAt: '' },
-      designation: { id: 'des2', title: 'Physics Teacher', code: 'PHY-TCH', level: 2, status: 'ACTIVE', createdAt: '' },
-      status: 'ACTIVE',
-      createdAt: '',
-    },
-    {
-      id: '3',
-      employeeCode: 'EMP-2026-0003',
-      firstName: 'Vikram',
-      lastName: 'Sharma',
-      email: 'vikram.sharma@school.edu',
-      phone: '+91 98765 43212',
-      gender: 'Male',
-      dateOfBirth: '1985-11-10',
-      dateOfJoining: '2021-04-01',
-      employmentType: 'FULL_TIME',
-      department: { id: 'd3', name: 'Administration', code: 'ADMIN', status: 'ACTIVE', createdAt: '' },
-      designation: { id: 'des3', title: 'Chief Accountant', code: 'ACC-CHIEF', level: 4, status: 'ACTIVE', createdAt: '' },
-      status: 'ACTIVE',
-      createdAt: '',
-    },
-    {
-      id: '4',
-      employeeCode: 'EMP-2026-0004',
-      firstName: 'Fatima',
-      lastName: 'Zaidi',
-      email: 'fatima.zaidi@school.edu',
-      phone: '+91 98765 43213',
-      gender: 'Female',
-      dateOfBirth: '1995-02-18',
-      dateOfJoining: '2024-06-01',
-      employmentType: 'CONTRACT',
-      department: { id: 'd4', name: 'Languages', code: 'LANG', status: 'ACTIVE', createdAt: '' },
-      designation: { id: 'des4', title: 'English Teacher', code: 'ENG-TCH', level: 2, status: 'ACTIVE', createdAt: '' },
-      status: 'ON_LEAVE',
-      createdAt: '',
-    },
-    {
-      id: '5',
-      employeeCode: 'EMP-2026-0005',
-      firstName: 'David',
-      lastName: 'Miller',
-      email: 'david.miller@school.edu',
-      phone: '+91 98765 43214',
-      gender: 'Male',
-      dateOfBirth: '1990-07-25',
-      dateOfJoining: '2023-08-15',
-      employmentType: 'FULL_TIME',
-      department: { id: 'd5', name: 'Physical Education', code: 'PET', status: 'ACTIVE', createdAt: '' },
-      designation: { id: 'des5', title: 'Sports Instructor', code: 'SPORTS-INS', level: 2, status: 'ACTIVE', createdAt: '' },
-      status: 'ACTIVE',
-      createdAt: '',
-    },
-  ];
-
-  const displayStaff =
-    staffData?.items && staffData.items.length > 0 ? staffData.items : fallbackStaff;
-
-  const totalCount = staffData?.total || 65;
-  const totalPages = staffData?.totalPages || 7;
+  const displayStaff = staffData?.items || [];
+  const totalCount = staffData?.total || 0;
+  const totalPages = staffData?.totalPages || 1;
 
   const columns: Column<StaffMember>[] = [
     {
@@ -340,6 +256,11 @@ export default function StaffDirectoryPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by name, code, email, phone..."
+        emptyTitle="No staff members yet"
+        emptyDescription="No staff records found in the database. Click below to add a staff member."
+        emptyActionLabel="+ Add Staff Member"
+        onEmptyAction={() => router.push('/staff/new')}
+        emptyIcon={Briefcase}
         currentPage={page}
         totalPages={totalPages}
         totalItems={totalCount}

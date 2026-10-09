@@ -58,20 +58,8 @@ export default function DepartmentsDesignationsPage() {
     },
   });
 
-  // Mock fallbacks if database is fresh
-  const displayDepartments: Department[] = departments.length > 0 ? departments : [
-    { id: 'd1', name: 'Mathematics Department', code: 'MATH', description: 'Curriculum and faculty for mathematics', status: 'ACTIVE', createdAt: '' },
-    { id: 'd2', name: 'Science & Physics', code: 'SCI', description: 'Physics, chemistry and biology labs', status: 'ACTIVE', createdAt: '' },
-    { id: 'd3', name: 'Languages & Humanities', code: 'LANG', description: 'English, Hindi, and regional languages', status: 'ACTIVE', createdAt: '' },
-    { id: 'd4', name: 'Administration & Accounts', code: 'ADMIN', description: 'School administrative and financial staff', status: 'ACTIVE', createdAt: '' },
-  ];
-
-  const displayDesignations: Designation[] = designations.length > 0 ? designations : [
-    { id: 'des1', title: 'Senior Lecturer', code: 'SR-LEC', level: 3, status: 'ACTIVE', department: displayDepartments[0], createdAt: '' },
-    { id: 'des2', title: 'Assistant Teacher', code: 'ASST-TCH', level: 2, status: 'ACTIVE', department: displayDepartments[0], createdAt: '' },
-    { id: 'des3', title: 'Laboratory Instructor', code: 'LAB-INS', level: 2, status: 'ACTIVE', department: displayDepartments[1], createdAt: '' },
-    { id: 'des4', title: 'Chief Accountant', code: 'ACC-CHIEF', level: 4, status: 'ACTIVE', department: displayDepartments[3], createdAt: '' },
-  ];
+  const displayDepartments: Department[] = departments;
+  const displayDesignations: Designation[] = designations;
 
   return (
     <div className="space-y-6 pb-12">
@@ -117,24 +105,30 @@ export default function DepartmentsDesignationsPage() {
           </div>
 
           <div className="space-y-3">
-            {displayDepartments.map((dept) => (
-              <Card key={dept.id} hoverEffect className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-bold text-[#172033]">{dept.name}</h4>
-                    <span className="font-mono text-[11px] font-semibold text-[#2563EB]">
-                      {dept.code}
-                    </span>
-                    {dept.description && (
-                      <p className="text-xs text-[#667085] mt-1.5 leading-relaxed">{dept.description}</p>
-                    )}
+            {displayDepartments.length === 0 ? (
+              <div className="p-8 text-center bg-white border border-[#E5EAF1] rounded-2xl text-xs text-[#667085]">
+                No departments created yet. Click <strong>+ Add Department</strong> to create one.
+              </div>
+            ) : (
+              displayDepartments.map((dept) => (
+                <Card key={dept.id} hoverEffect className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#172033]">{dept.name}</h4>
+                      <span className="font-mono text-[11px] font-semibold text-[#2563EB]">
+                        {dept.code}
+                      </span>
+                      {dept.description && (
+                        <p className="text-xs text-[#667085] mt-1.5 leading-relaxed">{dept.description}</p>
+                      )}
+                    </div>
+                    <Badge variant="success" size="sm" dot>
+                      Active
+                    </Badge>
                   </div>
-                  <Badge variant="success" size="sm" dot>
-                    Active
-                  </Badge>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
@@ -149,25 +143,31 @@ export default function DepartmentsDesignationsPage() {
           </div>
 
           <div className="space-y-3">
-            {displayDesignations.map((desig) => (
-              <Card key={desig.id} hoverEffect className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-bold text-[#172033]">{desig.title}</h4>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-[#667085]">
-                      <span className="font-mono text-[#2563EB] font-semibold">{desig.code}</span>
-                      <span>•</span>
-                      <span>{desig.department?.name || 'General Department'}</span>
-                      <span>•</span>
-                      <span className="font-medium">Level {desig.level}</span>
+            {displayDesignations.length === 0 ? (
+              <div className="p-8 text-center bg-white border border-[#E5EAF1] rounded-2xl text-xs text-[#667085]">
+                No designations created yet. Click <strong>+ Add Designation</strong> to create one.
+              </div>
+            ) : (
+              displayDesignations.map((desig) => (
+                <Card key={desig.id} hoverEffect className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#172033]">{desig.title}</h4>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#667085]">
+                        <span className="font-mono text-[#2563EB] font-semibold">{desig.code}</span>
+                        <span>•</span>
+                        <span>{desig.department?.name || 'General Department'}</span>
+                        <span>•</span>
+                        <span className="font-medium">Level {desig.level}</span>
+                      </div>
                     </div>
+                    <Badge variant="neutral" size="sm">
+                      Level {desig.level}
+                    </Badge>
                   </div>
-                  <Badge variant="neutral" size="sm">
-                    Level {desig.level}
-                  </Badge>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>

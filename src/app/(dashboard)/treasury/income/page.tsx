@@ -60,53 +60,7 @@ export default function NonFeeIncomePage() {
     queryFn: () => treasuryService.getAccounts(),
   });
 
-  // Sample data fallback
-  const sampleIncomes: IncomeTransaction[] = [
-    {
-      id: '1',
-      incomeCategoryId: 'cat-1',
-      incomeCategory: { id: 'cat-1', name: 'Government & Research Grants', code: 'GRANT', status: 'ACTIVE' },
-      title: 'State Science & Tech Laboratory Grant',
-      amount: 500000,
-      transactionDate: '2026-09-29',
-      paymentMethod: 'BANK_TRANSFER',
-      payerName: 'Department of Higher Education',
-      referenceNumber: 'GRANT-2026-04',
-      receiptNumber: 'INC-2026-0001',
-      status: 'RECEIVED',
-      createdAt: '2026-09-29T10:00:00Z',
-    },
-    {
-      id: '2',
-      incomeCategoryId: 'cat-2',
-      incomeCategory: { id: 'cat-2', name: 'Alumni & Philanthropic Donations', code: 'DONATION', status: 'ACTIVE' },
-      title: 'Alumni Sports Complex Renovation Gift',
-      amount: 250000,
-      transactionDate: '2026-09-25',
-      paymentMethod: 'CHEQUE',
-      payerName: 'Greenwood Alumni Foundation',
-      referenceNumber: 'CHQ-891024',
-      receiptNumber: 'INC-2026-0002',
-      status: 'RECEIVED',
-      createdAt: '2026-09-25T14:30:00Z',
-    },
-    {
-      id: '3',
-      incomeCategoryId: 'cat-3',
-      incomeCategory: { id: 'cat-3', name: 'Campus Cafeteria & Canteen Lease', code: 'CANTEEN', status: 'ACTIVE' },
-      title: 'Monthly Cafeteria Vendor Concession Fee',
-      amount: 35000,
-      transactionDate: '2026-09-20',
-      paymentMethod: 'UPI',
-      payerName: 'FreshBites Caterers Pvt Ltd',
-      referenceNumber: 'UPI/98124981',
-      receiptNumber: 'INC-2026-0003',
-      status: 'RECEIVED',
-      createdAt: '2026-09-20T11:15:00Z',
-    },
-  ];
-
-  const incomeList = incomesData?.items && incomesData.items.length > 0 ? incomesData.items : sampleIncomes;
+  const incomeList = incomesData?.items || [];
 
   const handleRecord = async (e: React.FormEvent) => {
     e.preventDefault();

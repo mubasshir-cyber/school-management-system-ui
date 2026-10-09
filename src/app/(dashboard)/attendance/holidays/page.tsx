@@ -47,54 +47,7 @@ export default function HolidaysPage() {
     queryFn: () => attendanceService.getHolidays(),
   });
 
-  const sampleHolidays: Holiday[] = [
-    {
-      id: '1',
-      title: 'Independence Day',
-      holidayType: 'NATIONAL',
-      startDate: '2026-08-15',
-      endDate: '2026-08-15',
-      totalDays: 1,
-      description: 'National public holiday celebration',
-      isRecurring: true,
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-    {
-      id: '2',
-      title: 'Eid-ul-Fitr Break',
-      holidayType: 'RELIGIOUS',
-      startDate: '2026-04-10',
-      endDate: '2026-04-12',
-      totalDays: 3,
-      description: 'Religious festival celebration and break',
-      isRecurring: false,
-      createdAt: '2026-04-01T00:00:00Z',
-    },
-    {
-      id: '3',
-      title: 'Winter Vacation',
-      holidayType: 'VACATION',
-      startDate: '2026-12-24',
-      endDate: '2027-01-05',
-      totalDays: 13,
-      description: 'Mid-term winter term break for all grades',
-      isRecurring: true,
-      createdAt: '2026-12-01T00:00:00Z',
-    },
-    {
-      id: '4',
-      title: 'Annual Sports Day Holiday',
-      holidayType: 'SCHOOL_EVENT',
-      startDate: '2026-11-18',
-      endDate: '2026-11-18',
-      totalDays: 1,
-      description: 'Day off post sports day events',
-      isRecurring: false,
-      createdAt: '2026-11-01T00:00:00Z',
-    },
-  ];
-
-  const holidayList = holidaysData.length > 0 ? holidaysData : sampleHolidays;
+  const holidayList = holidaysData || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

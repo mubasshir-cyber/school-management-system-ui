@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { navigationGroups } from './nav-data';
+import { navigationGroups, isRouteActive } from './nav-data';
 import { useAuthStore } from '../../stores/auth.store';
 import {
   GraduationCap,
@@ -30,9 +30,7 @@ export function TabletSidebar() {
       <nav className="flex-1 w-full px-3 space-y-2 overflow-y-auto no-scrollbar flex flex-col items-center">
         {allItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href));
+          const isActive = isRouteActive(pathname, item.href);
 
           return (
             <div key={item.name} className="relative group flex items-center justify-center w-full">

@@ -46,100 +46,18 @@ export default function TreasuryDashboardPage() {
     queryFn: () => treasuryService.getCashFlowLedger(),
   });
 
-  // Sample data fallback
-  const sampleAccounts: TreasuryAccount[] = [
-    {
-      id: 'acc-1',
-      accountName: 'HDFC Main Operational Account',
-      accountType: 'BANK',
-      accountNumber: '50200049182391',
-      bankName: 'HDFC Bank Ltd.',
-      branchName: 'Knowledge Park Branch',
-      openingBalance: 1200000,
-      currentBalance: 3450000,
-      status: 'ACTIVE',
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-    {
-      id: 'acc-2',
-      accountName: 'SBI Development & Grants Account',
-      accountType: 'BANK',
-      accountNumber: '392019481923',
-      bankName: 'State Bank of India',
-      branchName: 'City Center Branch',
-      openingBalance: 500000,
-      currentBalance: 1850000,
-      status: 'ACTIVE',
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-    {
-      id: 'acc-3',
-      accountName: 'Campus Petty Cash Vault',
-      accountType: 'PETTY_CASH',
-      openingBalance: 50000,
-      currentBalance: 38400,
-      status: 'ACTIVE',
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-  ];
-
-  const sampleCashFlow: CashFlowItem[] = [
-    {
-      id: '1',
-      date: '2026-09-30',
-      type: 'INFLOW',
-      category: 'Fee Collections',
-      title: 'Daily Student Tuition Fee Counter Collection',
-      reference: 'REC-2026-00142',
-      amount: 48500,
-      method: 'UPI / CASH',
-    },
-    {
-      id: '2',
-      date: '2026-09-30',
-      type: 'OUTFLOW',
-      category: 'Staff Payroll',
-      title: 'Faculty Monthly Salary Disbursement (September 2026)',
-      reference: 'NEFT-SAL-0926',
-      amount: 1610000,
-      method: 'BANK_TRANSFER',
-      status: 'PAID',
-    },
-    {
-      id: '3',
-      date: '2026-09-29',
-      type: 'INFLOW',
-      category: 'Government Grant',
-      title: 'State Science & Tech Laboratory Upgrade Grant',
-      reference: 'GRANT-2026-04',
-      amount: 500000,
-      method: 'BANK_TRANSFER',
-    },
-    {
-      id: '4',
-      date: '2026-09-28',
-      type: 'OUTFLOW',
-      category: 'Campus Maintenance',
-      title: 'Solar Inverter Annual AMC & Battery Replacement',
-      reference: 'VOU-2026-0012',
-      amount: 42000,
-      method: 'CHEQUE',
-      status: 'PAID',
-    },
-  ];
-
-  const accounts = accountsData.length > 0 ? accountsData : sampleAccounts;
-  const cashFlowList = cashFlowData.length > 0 ? cashFlowData : sampleCashFlow;
+  const accounts = accountsData;
+  const cashFlowList = cashFlowData;
 
   const summary = summaryData || {
-    totalInflow: 4340000,
-    totalOutflow: 1652000,
-    netLiquidity: 2688000,
-    totalAccountBalance: 5338400,
-    feeInflow: 3840000,
-    nonFeeInflow: 500000,
-    payrollOutflow: 1610000,
-    expenseOutflow: 42000,
+    totalInflow: 0,
+    totalOutflow: 0,
+    netLiquidity: 0,
+    totalAccountBalance: 0,
+    feeInflow: 0,
+    nonFeeInflow: 0,
+    payrollOutflow: 0,
+    expenseOutflow: 0,
   };
 
   const columns: Column<CashFlowItem>[] = [
